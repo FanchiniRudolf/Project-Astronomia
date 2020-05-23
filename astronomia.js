@@ -1,12 +1,7 @@
 
 
-let renderer = null, 
-scene = null, 
-camera = null,
-root = null,
-group = null,
-objectList = [],
-orbitControls = null;
+let renderer = null, scene = null, camera = null,
+root = null,group = null,objectList = [],orbitControls = null;
 
 let objLoader = null;
 
@@ -14,19 +9,12 @@ let currentTime = Date.now();
 
 let directionalLight = null;
 let spotLight = null;
-let ambientLight = null;
-let pointLight = null;
 let mapUrl = "images/checker_large.gif";
 
-let duration = 12, // sec
-    crateAnimator = null,
-    animateCrate = true,
-    animateWaves = true,
-    animateLight = true,
-    animateWater = true,
-    loopAnimation = true;
+let duration = 12; // sec
 
-var composer;
+
+var composer, analyser, uniforms, listener, dataArray;
 
 var params = {
 	    exposure: 1,
@@ -92,6 +80,29 @@ async function loadObj(objModelUrl, objectList)
     }
 }
 
+function createAudio(){
+    listener = new THREE.AudioListener();
+
+	var audio = new THREE.Audio( listener );
+
+	var audioLoader = new THREE.AudioLoader();
+        audioLoader.load( 'astronomia.mp3', function( buffer ) {
+            audio.setBuffer( buffer );
+            audio.setLoop(true);
+            audio.setVolume(0.5);
+            audio.play();
+        });
+
+     // create an AudioAnalyser, passing in the sound and desired fftSize
+    var analyser = new THREE.AudioAnalyser( audio, 2048 );
+
+    //var bufferLength = analyser.frequencyBinCount;;
+    console.log(analyser.getFrequencyData());
+    console.log(analyser.data);  
+    scene.add(listener);
+}
+
+
 function run() 
 {
     requestAnimationFrame(function() { run(); });
@@ -103,11 +114,8 @@ function run()
     // Update the animations
     KF.update();
 
-
     // Update the camera controller
     orbitControls.update();
-
-
 
 }
 
@@ -189,6 +197,9 @@ function createScene(canvas) {
     composer.addPass( bloomPass );
 
     scene.add( root );
+
+    var startButton = document.getElementById( 'startButton' );
+	startButton.addEventListener( 'click', createAudio );
 
 
 }

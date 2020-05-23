@@ -1,8 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>...</title>
-
+<title>Astronomia</title>
 <link rel="stylesheet" href="libs/jquery-ui/jquery-ui.css" />
 <link rel="stylesheet" href="libs/colorpicker/css/colorpicker.css" />
 <link rel="stylesheet" href="css/main.css" />
@@ -12,7 +11,8 @@
 <script src="libs/jquery-ui/jquery-ui.js"></script>
 
 <script src="libs/three.js/three.min.js"></script>
-<script src="../libs/three.js/controls/OrbitControls.js"></script>
+
+<script src="libs/three.js/controls/OrbitControls.js"></script>
 <script src="libs/colorpicker/js/colorpicker.js"></script>
 
 <script src="libs/postprocessing/EffectComposer.js"></script>
@@ -26,6 +26,7 @@
 <script src="libs/three.js/loaders/GLTFLoader.js"></script>
 <script src="libs/three.js/loaders/OBJLoader.js"></script>
 <script src="libs/three.js/utils/promiseLoader.js"></script>
+
 
 
 <script src="libs/tween.js/tween.js"></script>
@@ -58,8 +59,10 @@
 <div id="container">
     <canvas id="webglcanvas"></canvas>
 	<div id="title">
-		Astronomia project
+		Astronomia
+		<button id="startButton">Click to Play</button>
 	</div>
+	<audio id="audio" src='astronomia.mp3'></audio>
 
 </div>
 
