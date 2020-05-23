@@ -92,13 +92,13 @@ async function loadObj(objModelUrl, objectList)
     }
 }
 
-
 function run() 
 {
     requestAnimationFrame(function() { run(); });
     
     // Render the scene
-    renderer.render( scene, camera );
+    renderer.render(scene, camera);
+    //composer.render();
 
     // Update the animations
     KF.update();
@@ -107,12 +107,9 @@ function run()
     // Update the camera controller
     orbitControls.update();
 
-    //composer.render();
-
 
 
 }
-
 
 
 function createScene(canvas) {
@@ -180,21 +177,19 @@ function createScene(canvas) {
 
     } );
 
-    var composer = new THREE.EffectComposer( renderer );
+    composer = new THREE.EffectComposer( renderer );
     var renderPass = new THREE.RenderPass( scene, camera );
     composer.addPass( renderPass );
-    renderPass.renderToScreen = true;
 
 	var bloomPass = new THREE.BloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.5, 0.85 );
     bloomPass.threshold = params.bloomThreshold;
 	bloomPass.strength = params.bloomStrength;
-	bloomPass.radius = params.bloomRadius;
-    composer.addPass( bloomPass );
+    bloomPass.radius = params.bloomRadius;
     bloomPass.renderToScreen = true;
+    composer.addPass( bloomPass );
 
     scene.add( root );
 
 
 }
-
 
