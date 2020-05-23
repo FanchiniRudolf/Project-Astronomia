@@ -90,7 +90,6 @@ async function loadObj(objModelUrl, objectList)
 }
 
 
-
 function run() 
 {
     requestAnimationFrame(function() { run(); });
@@ -103,7 +102,10 @@ function run()
 
     composer.render();
 
+
+
 }
+
 
 
 function createScene(canvas) {

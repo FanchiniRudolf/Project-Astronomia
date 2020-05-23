@@ -35,15 +35,13 @@
 	$(document).ready(
 			function() {
 
-				var canvas = document.getElementById("webglcanvas");
+                var canvas = document.getElementById("webglcanvas");
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
 
 				// create the scene
 				createScene(canvas);
-
-				
-				// create the animations
-				//playAnimations();
-				
+							
 		        // Run the run loop
 		        run();
 			}
@@ -55,14 +53,11 @@
 <body>
 
 <div id="container">
-    <canvas id="webglcanvas" width=800 height=600></canvas>
+    <canvas id="webglcanvas"></canvas>
 	<div id="title">
-		Penguin wobbling
+		Astronomia project
 	</div>
 
-	<div id="prompt">
-		Drag the mouse to rotate the camera<br>Use the scroll wheel to zoom.
-	</div>
 </div>
 
 </body>
