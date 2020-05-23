@@ -2,25 +2,18 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-import {
-	ShaderMaterial,
-	UniformsUtils
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
-import { FilmShader } from "../shaders/FilmShader.js";
+THREE.FilmPass = function ( noiseIntensity, scanlinesIntensity, scanlinesCount, grayscale ) {
 
-var FilmPass = function ( noiseIntensity, scanlinesIntensity, scanlinesCount, grayscale ) {
+	THREE.Pass.call( this );
 
-	Pass.call( this );
+	if ( THREE.FilmShader === undefined )
+		console.error( "THREE.FilmPass relies on THREE.FilmShader" );
 
-	if ( FilmShader === undefined )
-		console.error( "FilmPass relies on FilmShader" );
+	var shader = THREE.FilmShader;
 
-	var shader = FilmShader;
+	this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
-	this.uniforms = UniformsUtils.clone( shader.uniforms );
-
-	this.material = new ShaderMaterial( {
+	this.material = new THREE.ShaderMaterial( {
 
 		uniforms: this.uniforms,
 		vertexShader: shader.vertexShader,
@@ -33,13 +26,13 @@ var FilmPass = function ( noiseIntensity, scanlinesIntensity, scanlinesCount, gr
 	if ( scanlinesIntensity !== undefined ) this.uniforms.sIntensity.value = scanlinesIntensity;
 	if ( scanlinesCount !== undefined ) this.uniforms.sCount.value = scanlinesCount;
 
-	this.fsQuad = new Pass.FullScreenQuad( this.material );
+	this.fsQuad = new THREE.Pass.FullScreenQuad( this.material );
 
 };
 
-FilmPass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.FilmPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: FilmPass,
+	constructor: THREE.FilmPass,
 
 	render: function ( renderer, writeBuffer, readBuffer, deltaTime /*, maskActive */ ) {
 
@@ -62,5 +55,3 @@ FilmPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 	}
 
 } );
-
-export { FilmPass };

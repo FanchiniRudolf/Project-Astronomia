@@ -56,81 +56,6 @@ function promisifyLoader ( loader, onProgress )
 
 const onError = ( ( err ) => { console.error( err ); } );
 
-/*
-function playAnimations(){
-
-    let rad = 20;
-
-    objectList.forEach(idx=>{
-        console.log('idx: ',idx);
-        idx.position.set(0,0,0);
-
-        if (animateCrate) {
-
-            crateAnimator = new KF.KeyFrameAnimator;
-            crateAnimator.init({
-                interps:
-                    [
-                        {
-                            keys: [.1, .2, .3, .4, .5, .6, .7, .75, .8, 0.85, 0.9, 1],
-                            values: [
-
-                                {x: 0, z: 0},
-
-                                { x: Math.cos((10 * Math.PI) / 5) * rad, z:  Math.sin((10 * Math.PI) / 5) * rad },
-                                { x: Math.cos((1 * Math.PI) / 5) * rad, z:  Math.sin((1 * Math.PI) / 5) * rad },
-                                { x: Math.cos((2 * Math.PI) / 5) * rad, z:  Math.sin((2 * Math.PI) / 5) * rad },
-                                { x: Math.cos((3 * Math.PI) / 5) * rad, z:  Math.sin((3 * Math.PI) / 5) * rad },
-                                { x: Math.cos((4 * Math.PI) / 5) * rad, z:  Math.sin((4 * Math.PI) / 5) * rad },
-                                { x: Math.cos((5 * Math.PI) / 5) * rad, z:  Math.sin((5 * Math.PI) / 5) * rad },
-
-                                { x: Math.cos((9 * Math.PI) / 5) * rad, z:  Math.sin((9 * Math.PI) / 5) * rad },
-                                { x: Math.cos((8 * Math.PI) / 5) * rad, z:  Math.sin((8 * Math.PI) / 5) * rad },
-                                { x: Math.cos((7 * Math.PI) / 5) * rad, z:  Math.sin((7 * Math.PI) / 5) * rad },
-                                { x: Math.cos((6 * Math.PI) / 5) * rad, z:  Math.sin((6 * Math.PI) / 5) * rad },
-
-                                {x: 0, z: 0},
-
-
-                            ],
-                            target:idx.position
-                        },
-                        {
-                            keys:[0, 0.02, 0.04, 0.08, 0.1,
-                                0.12, 0.14, 0.16, 0.18, 0.2,
-                                0.22, 0.24, 0.26, 0.28, 0.3,
-                                0.32, 0.34, 0.36, 0.38, 0.4, 
-                                0.42, 0.44, 0.46, 0.48, 0.5,
-                                0.52, 0.54, 0.56, 0.58, 0.6,
-                                0.62, 0.64, 0.66, 0.68, 0.7,
-                                0.72, 0.74, 0.76, 0.78, 0.8,
-                                0.82, 0.84, 0.86, 0.88, 0.9,
-                                0.92, 0.94, 0.96, 0.98, 1],
-                            values:[
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 },
-                                { x : 0, z : 0 },{ x : 0.2, z : 0.2 },{ x : 0, z : 0 },{ x : 0.2, z : -0.2 },{ x : 0, z : 0 }
-                            ],
-                            target:idx.rotation
-                        },
-                    ],
-                loop: loopAnimation,
-                duration:duration * 1000,
-            });
-            crateAnimator.start();
-        }
-
-    });
-
-}*/
-
 async function loadObj(objModelUrl, objectList)
 {
     const objPromiseLoader = promisifyLoader(new THREE.OBJLoader());
@@ -176,6 +101,8 @@ function run()
     // Update the animations
     KF.update();
 
+    composer.render();
+
 }
 
 
@@ -204,8 +131,10 @@ function createScene(canvas) {
     // Create a group to hold all the objects
     root = new THREE.Object3D;
 
-    ambientLight = new THREE.AmbientLight ( 0xffffff, 0.8);
+    ambientLight = new THREE.AmbientLight ( 0xff00ff, 0.8);
     root.add(ambientLight);
+    pointLight = new THREE.PointLight(0x00ff00, 1)
+    root.add(pointLight);
 
     // Create the objects
     loadObj(objModelUrl, objectList);
@@ -230,17 +159,17 @@ function createScene(canvas) {
     mesh.receiveShadow = true;
     group.add( mesh );
 
-    /*
-    var renderScene = new RenderPass( scene, camera );
+    
+    var renderScene = new THREE.RenderPass( scene, camera );
 
-	var bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+	var bloomPass = new THREE.BloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
     bloomPass.threshold = params.bloomThreshold;
 	bloomPass.strength = params.bloomStrength;
 	bloomPass.radius = params.bloomRadius;
 
-	composer = new EffectComposer( renderer );
+	composer = new THREE.EffectComposer( renderer );
 	composer.addPass( renderScene );
-	composer.addPass( bloomPass );*/
+	composer.addPass( bloomPass );
 
     scene.add( root );
 

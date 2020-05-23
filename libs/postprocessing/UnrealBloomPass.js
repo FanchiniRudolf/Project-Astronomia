@@ -2,22 +2,6 @@
  * @author spidersharma / http://eduperiment.com/
  */
 
-import {
-	AdditiveBlending,
-	Color,
-	LinearFilter,
-	MeshBasicMaterial,
-	RGBAFormat,
-	ShaderMaterial,
-	UniformsUtils,
-	Vector2,
-	Vector3,
-	WebGLRenderTarget
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
-import { CopyShader } from "../shaders/CopyShader.js";
-import { LuminosityHighPassShader } from "../shaders/LuminosityHighPassShader.js";
-
 /**
  * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
  * mip map chain of bloom textures and blurs them with different radii. Because
@@ -27,40 +11,40 @@ import { LuminosityHighPassShader } from "../shaders/LuminosityHighPassShader.js
  * Reference:
  * - https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
  */
-var UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
+THREE.UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
 
-	Pass.call( this );
+	THREE.Pass.call( this );
 
 	this.strength = ( strength !== undefined ) ? strength : 1;
 	this.radius = radius;
 	this.threshold = threshold;
-	this.resolution = ( resolution !== undefined ) ? new Vector2( resolution.x, resolution.y ) : new Vector2( 256, 256 );
+	this.resolution = ( resolution !== undefined ) ? new THREE.Vector2( resolution.x, resolution.y ) : new THREE.Vector2( 256, 256 );
 
 	// create color only once here, reuse it later inside the render function
-	this.clearColor = new Color( 0, 0, 0 );
+	this.clearColor = new THREE.Color( 0, 0, 0 );
 
 	// render targets
-	var pars = { minFilter: LinearFilter, magFilter: LinearFilter, format: RGBAFormat };
+	var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat };
 	this.renderTargetsHorizontal = [];
 	this.renderTargetsVertical = [];
 	this.nMips = 5;
 	var resx = Math.round( this.resolution.x / 2 );
 	var resy = Math.round( this.resolution.y / 2 );
 
-	this.renderTargetBright = new WebGLRenderTarget( resx, resy, pars );
+	this.renderTargetBright = new THREE.WebGLRenderTarget( resx, resy, pars );
 	this.renderTargetBright.texture.name = "UnrealBloomPass.bright";
 	this.renderTargetBright.texture.generateMipmaps = false;
 
 	for ( var i = 0; i < this.nMips; i ++ ) {
 
-		var renderTargetHorizonal = new WebGLRenderTarget( resx, resy, pars );
+		var renderTargetHorizonal = new THREE.WebGLRenderTarget( resx, resy, pars );
 
 		renderTargetHorizonal.texture.name = "UnrealBloomPass.h" + i;
 		renderTargetHorizonal.texture.generateMipmaps = false;
 
 		this.renderTargetsHorizontal.push( renderTargetHorizonal );
 
-		var renderTargetVertical = new WebGLRenderTarget( resx, resy, pars );
+		var renderTargetVertical = new THREE.WebGLRenderTarget( resx, resy, pars );
 
 		renderTargetVertical.texture.name = "UnrealBloomPass.v" + i;
 		renderTargetVertical.texture.generateMipmaps = false;
@@ -75,16 +59,16 @@ var UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
 
 	// luminosity high pass material
 
-	if ( LuminosityHighPassShader === undefined )
-		console.error( "UnrealBloomPass relies on LuminosityHighPassShader" );
+	if ( THREE.LuminosityHighPassShader === undefined )
+		console.error( "THREE.UnrealBloomPass relies on THREE.LuminosityHighPassShader" );
 
-	var highPassShader = LuminosityHighPassShader;
-	this.highPassUniforms = UniformsUtils.clone( highPassShader.uniforms );
+	var highPassShader = THREE.LuminosityHighPassShader;
+	this.highPassUniforms = THREE.UniformsUtils.clone( highPassShader.uniforms );
 
 	this.highPassUniforms[ "luminosityThreshold" ].value = threshold;
 	this.highPassUniforms[ "smoothWidth" ].value = 0.01;
 
-	this.materialHighPassFilter = new ShaderMaterial( {
+	this.materialHighPassFilter = new THREE.ShaderMaterial( {
 		uniforms: this.highPassUniforms,
 		vertexShader: highPassShader.vertexShader,
 		fragmentShader: highPassShader.fragmentShader,
@@ -101,7 +85,7 @@ var UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
 
 		this.separableBlurMaterials.push( this.getSeperableBlurMaterial( kernelSizeArray[ i ] ) );
 
-		this.separableBlurMaterials[ i ].uniforms[ "texSize" ].value = new Vector2( resx, resy );
+		this.separableBlurMaterials[ i ].uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
 
 		resx = Math.round( resx / 2 );
 
@@ -122,27 +106,27 @@ var UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
 
 	var bloomFactors = [ 1.0, 0.8, 0.6, 0.4, 0.2 ];
 	this.compositeMaterial.uniforms[ "bloomFactors" ].value = bloomFactors;
-	this.bloomTintColors = [ new Vector3( 1, 1, 1 ), new Vector3( 1, 1, 1 ), new Vector3( 1, 1, 1 ),
-							 new Vector3( 1, 1, 1 ), new Vector3( 1, 1, 1 ) ];
+	this.bloomTintColors = [ new THREE.Vector3( 1, 1, 1 ), new THREE.Vector3( 1, 1, 1 ), new THREE.Vector3( 1, 1, 1 ),
+							 new THREE.Vector3( 1, 1, 1 ), new THREE.Vector3( 1, 1, 1 ) ];
 	this.compositeMaterial.uniforms[ "bloomTintColors" ].value = this.bloomTintColors;
 
 	// copy material
-	if ( CopyShader === undefined ) {
+	if ( THREE.CopyShader === undefined ) {
 
-		console.error( "UnrealBloomPass relies on CopyShader" );
+		console.error( "THREE.UnrealBloomPass relies on THREE.CopyShader" );
 
 	}
 
-	var copyShader = CopyShader;
+	var copyShader = THREE.CopyShader;
 
-	this.copyUniforms = UniformsUtils.clone( copyShader.uniforms );
+	this.copyUniforms = THREE.UniformsUtils.clone( copyShader.uniforms );
 	this.copyUniforms[ "opacity" ].value = 1.0;
 
-	this.materialCopy = new ShaderMaterial( {
+	this.materialCopy = new THREE.ShaderMaterial( {
 		uniforms: this.copyUniforms,
 		vertexShader: copyShader.vertexShader,
 		fragmentShader: copyShader.fragmentShader,
-		blending: AdditiveBlending,
+		blending: THREE.AdditiveBlending,
 		depthTest: false,
 		depthWrite: false,
 		transparent: true
@@ -151,18 +135,18 @@ var UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
 	this.enabled = true;
 	this.needsSwap = false;
 
-	this.oldClearColor = new Color();
+	this.oldClearColor = new THREE.Color();
 	this.oldClearAlpha = 1;
 
-	this.basic = new MeshBasicMaterial();
+	this.basic = new THREE.MeshBasicMaterial();
 
-	this.fsQuad = new Pass.FullScreenQuad( null );
+	this.fsQuad = new THREE.Pass.FullScreenQuad( null );
 
 };
 
-UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.UnrealBloomPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: UnrealBloomPass,
+	constructor: THREE.UnrealBloomPass,
 
 	dispose: function () {
 
@@ -194,7 +178,7 @@ UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 			this.renderTargetsHorizontal[ i ].setSize( resx, resy );
 			this.renderTargetsVertical[ i ].setSize( resx, resy );
 
-			this.separableBlurMaterials[ i ].uniforms[ "texSize" ].value = new Vector2( resx, resy );
+			this.separableBlurMaterials[ i ].uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
 
 			resx = Math.round( resx / 2 );
 			resy = Math.round( resy / 2 );
@@ -246,13 +230,13 @@ UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 			this.fsQuad.material = this.separableBlurMaterials[ i ];
 
 			this.separableBlurMaterials[ i ].uniforms[ "colorTexture" ].value = inputRenderTarget.texture;
-			this.separableBlurMaterials[ i ].uniforms[ "direction" ].value = UnrealBloomPass.BlurDirectionX;
+			this.separableBlurMaterials[ i ].uniforms[ "direction" ].value = THREE.UnrealBloomPass.BlurDirectionX;
 			renderer.setRenderTarget( this.renderTargetsHorizontal[ i ] );
 			renderer.clear();
 			this.fsQuad.render( renderer );
 
 			this.separableBlurMaterials[ i ].uniforms[ "colorTexture" ].value = this.renderTargetsHorizontal[ i ].texture;
-			this.separableBlurMaterials[ i ].uniforms[ "direction" ].value = UnrealBloomPass.BlurDirectionY;
+			this.separableBlurMaterials[ i ].uniforms[ "direction" ].value = THREE.UnrealBloomPass.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetsVertical[ i ] );
 			renderer.clear();
 			this.fsQuad.render( renderer );
@@ -300,7 +284,7 @@ UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 	getSeperableBlurMaterial: function ( kernelRadius ) {
 
-		return new ShaderMaterial( {
+		return new THREE.ShaderMaterial( {
 
 			defines: {
 				"KERNEL_RADIUS": kernelRadius,
@@ -309,8 +293,8 @@ UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 			uniforms: {
 				"colorTexture": { value: null },
-				"texSize": { value: new Vector2( 0.5, 0.5 ) },
-				"direction": { value: new Vector2( 0.5, 0.5 ) }
+				"texSize": { value: new THREE.Vector2( 0.5, 0.5 ) },
+				"direction": { value: new THREE.Vector2( 0.5, 0.5 ) }
 			},
 
 			vertexShader:
@@ -352,7 +336,7 @@ UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 	getCompositeMaterial: function ( nMips ) {
 
-		return new ShaderMaterial( {
+		return new THREE.ShaderMaterial( {
 
 			defines: {
 				"NUM_MIPS": nMips
@@ -409,7 +393,5 @@ UnrealBloomPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 } );
 
-UnrealBloomPass.BlurDirectionX = new Vector2( 1.0, 0.0 );
-UnrealBloomPass.BlurDirectionY = new Vector2( 0.0, 1.0 );
-
-export { UnrealBloomPass };
+THREE.UnrealBloomPass.BlurDirectionX = new THREE.Vector2( 1.0, 0.0 );
+THREE.UnrealBloomPass.BlurDirectionY = new THREE.Vector2( 0.0, 1.0 );

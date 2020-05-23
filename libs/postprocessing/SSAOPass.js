@@ -2,39 +2,9 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import {
-	AddEquation,
-	Color,
-	CustomBlending,
-	DataTexture,
-	DepthTexture,
-	DstAlphaFactor,
-	DstColorFactor,
-	FloatType,
-	LinearFilter,
-	MathUtils,
-	MeshNormalMaterial,
-	NearestFilter,
-	NoBlending,
-	RGBAFormat,
-	RepeatWrapping,
-	ShaderMaterial,
-	UniformsUtils,
-	UnsignedShortType,
-	Vector3,
-	WebGLRenderTarget,
-	ZeroFactor
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
-import { SimplexNoise } from "../math/SimplexNoise.js";
-import { SSAOShader } from "../shaders/SSAOShader.js";
-import { SSAOBlurShader } from "../shaders/SSAOShader.js";
-import { SSAODepthShader } from "../shaders/SSAOShader.js";
-import { CopyShader } from "../shaders/CopyShader.js";
+THREE.SSAOPass = function ( scene, camera, width, height ) {
 
-var SSAOPass = function ( scene, camera, width, height ) {
-
-	Pass.call( this );
+	THREE.Pass.call( this );
 
 	this.width = ( width !== undefined ) ? width : 512;
 	this.height = ( height !== undefined ) ? height : 512;
@@ -60,51 +30,51 @@ var SSAOPass = function ( scene, camera, width, height ) {
 
 	// beauty render target with depth buffer
 
-	var depthTexture = new DepthTexture();
-	depthTexture.type = UnsignedShortType;
-	depthTexture.minFilter = NearestFilter;
-	depthTexture.maxFilter = NearestFilter;
+	var depthTexture = new THREE.DepthTexture();
+	depthTexture.type = THREE.UnsignedShortType;
+	depthTexture.minFilter = THREE.NearestFilter;
+	depthTexture.maxFilter = THREE.NearestFilter;
 
-	this.beautyRenderTarget = new WebGLRenderTarget( this.width, this.height, {
-		minFilter: LinearFilter,
-		magFilter: LinearFilter,
-		format: RGBAFormat,
+	this.beautyRenderTarget = new THREE.WebGLRenderTarget( this.width, this.height, {
+		minFilter: THREE.LinearFilter,
+		magFilter: THREE.LinearFilter,
+		format: THREE.RGBAFormat,
 		depthTexture: depthTexture,
 		depthBuffer: true
 	} );
 
 	// normal render target
 
-	this.normalRenderTarget = new WebGLRenderTarget( this.width, this.height, {
-		minFilter: NearestFilter,
-		magFilter: NearestFilter,
-		format: RGBAFormat
+	this.normalRenderTarget = new THREE.WebGLRenderTarget( this.width, this.height, {
+		minFilter: THREE.NearestFilter,
+		magFilter: THREE.NearestFilter,
+		format: THREE.RGBAFormat
 	} );
 
 	// ssao render target
 
-	this.ssaoRenderTarget = new WebGLRenderTarget( this.width, this.height, {
-		minFilter: LinearFilter,
-		magFilter: LinearFilter,
-		format: RGBAFormat
+	this.ssaoRenderTarget = new THREE.WebGLRenderTarget( this.width, this.height, {
+		minFilter: THREE.LinearFilter,
+		magFilter: THREE.LinearFilter,
+		format: THREE.RGBAFormat
 	} );
 
 	this.blurRenderTarget = this.ssaoRenderTarget.clone();
 
 	// ssao material
 
-	if ( SSAOShader === undefined ) {
+	if ( THREE.SSAOShader === undefined ) {
 
-		console.error( 'THREE.SSAOPass: The pass relies on SSAOShader.' );
+		console.error( 'THREE.SSAOPass: The pass relies on THREE.SSAOShader.' );
 
 	}
 
-	this.ssaoMaterial = new ShaderMaterial( {
-		defines: Object.assign( {}, SSAOShader.defines ),
-		uniforms: UniformsUtils.clone( SSAOShader.uniforms ),
-		vertexShader: SSAOShader.vertexShader,
-		fragmentShader: SSAOShader.fragmentShader,
-		blending: NoBlending
+	this.ssaoMaterial = new THREE.ShaderMaterial( {
+		defines: Object.assign( {}, THREE.SSAOShader.defines ),
+		uniforms: THREE.UniformsUtils.clone( THREE.SSAOShader.uniforms ),
+		vertexShader: THREE.SSAOShader.vertexShader,
+		fragmentShader: THREE.SSAOShader.fragmentShader,
+		blending: THREE.NoBlending
 	} );
 
 	this.ssaoMaterial.uniforms[ 'tDiffuse' ].value = this.beautyRenderTarget.texture;
@@ -120,28 +90,28 @@ var SSAOPass = function ( scene, camera, width, height ) {
 
 	// normal material
 
-	this.normalMaterial = new MeshNormalMaterial();
-	this.normalMaterial.blending = NoBlending;
+	this.normalMaterial = new THREE.MeshNormalMaterial();
+	this.normalMaterial.blending = THREE.NoBlending;
 
 	// blur material
 
-	this.blurMaterial = new ShaderMaterial( {
-		defines: Object.assign( {}, SSAOBlurShader.defines ),
-		uniforms: UniformsUtils.clone( SSAOBlurShader.uniforms ),
-		vertexShader: SSAOBlurShader.vertexShader,
-		fragmentShader: SSAOBlurShader.fragmentShader
+	this.blurMaterial = new THREE.ShaderMaterial( {
+		defines: Object.assign( {}, THREE.SSAOBlurShader.defines ),
+		uniforms: THREE.UniformsUtils.clone( THREE.SSAOBlurShader.uniforms ),
+		vertexShader: THREE.SSAOBlurShader.vertexShader,
+		fragmentShader: THREE.SSAOBlurShader.fragmentShader
 	} );
 	this.blurMaterial.uniforms[ 'tDiffuse' ].value = this.ssaoRenderTarget.texture;
 	this.blurMaterial.uniforms[ 'resolution' ].value.set( this.width, this.height );
 
 	// material for rendering the depth
 
-	this.depthRenderMaterial = new ShaderMaterial( {
-		defines: Object.assign( {}, SSAODepthShader.defines ),
-		uniforms: UniformsUtils.clone( SSAODepthShader.uniforms ),
-		vertexShader: SSAODepthShader.vertexShader,
-		fragmentShader: SSAODepthShader.fragmentShader,
-		blending: NoBlending
+	this.depthRenderMaterial = new THREE.ShaderMaterial( {
+		defines: Object.assign( {}, THREE.SSAODepthShader.defines ),
+		uniforms: THREE.UniformsUtils.clone( THREE.SSAODepthShader.uniforms ),
+		vertexShader: THREE.SSAODepthShader.vertexShader,
+		fragmentShader: THREE.SSAODepthShader.fragmentShader,
+		blending: THREE.NoBlending
 	} );
 	this.depthRenderMaterial.uniforms[ 'tDepth' ].value = this.beautyRenderTarget.depthTexture;
 	this.depthRenderMaterial.uniforms[ 'cameraNear' ].value = this.camera.near;
@@ -149,30 +119,30 @@ var SSAOPass = function ( scene, camera, width, height ) {
 
 	// material for rendering the content of a render target
 
-	this.copyMaterial = new ShaderMaterial( {
-		uniforms: UniformsUtils.clone( CopyShader.uniforms ),
-		vertexShader: CopyShader.vertexShader,
-		fragmentShader: CopyShader.fragmentShader,
+	this.copyMaterial = new THREE.ShaderMaterial( {
+		uniforms: THREE.UniformsUtils.clone( THREE.CopyShader.uniforms ),
+		vertexShader: THREE.CopyShader.vertexShader,
+		fragmentShader: THREE.CopyShader.fragmentShader,
 		transparent: true,
 		depthTest: false,
 		depthWrite: false,
-		blendSrc: DstColorFactor,
-		blendDst: ZeroFactor,
-		blendEquation: AddEquation,
-		blendSrcAlpha: DstAlphaFactor,
-		blendDstAlpha: ZeroFactor,
-		blendEquationAlpha: AddEquation
+		blendSrc: THREE.DstColorFactor,
+		blendDst: THREE.ZeroFactor,
+		blendEquation: THREE.AddEquation,
+		blendSrcAlpha: THREE.DstAlphaFactor,
+		blendDstAlpha: THREE.ZeroFactor,
+		blendEquationAlpha: THREE.AddEquation
 	} );
 
-	this.fsQuad = new Pass.FullScreenQuad( null );
+	this.fsQuad = new THREE.Pass.FullScreenQuad( null );
 
-	this.originalClearColor = new Color();
+	this.originalClearColor = new THREE.Color();
 
 };
 
-SSAOPass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.SSAOPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: SSAOPass,
+	constructor: THREE.SSAOPass,
 
 	dispose: function () {
 
@@ -223,52 +193,52 @@ SSAOPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 		switch ( this.output ) {
 
-			case SSAOPass.OUTPUT.SSAO:
+			case THREE.SSAOPass.OUTPUT.SSAO:
 
 				this.copyMaterial.uniforms[ 'tDiffuse' ].value = this.ssaoRenderTarget.texture;
-				this.copyMaterial.blending = NoBlending;
+				this.copyMaterial.blending = THREE.NoBlending;
 				this.renderPass( renderer, this.copyMaterial, this.renderToScreen ? null : writeBuffer );
 
 				break;
 
-			case SSAOPass.OUTPUT.Blur:
+			case THREE.SSAOPass.OUTPUT.Blur:
 
 				this.copyMaterial.uniforms[ 'tDiffuse' ].value = this.blurRenderTarget.texture;
-				this.copyMaterial.blending = NoBlending;
+				this.copyMaterial.blending = THREE.NoBlending;
 				this.renderPass( renderer, this.copyMaterial, this.renderToScreen ? null : writeBuffer );
 
 				break;
 
-			case SSAOPass.OUTPUT.Beauty:
+			case THREE.SSAOPass.OUTPUT.Beauty:
 
 				this.copyMaterial.uniforms[ 'tDiffuse' ].value = this.beautyRenderTarget.texture;
-				this.copyMaterial.blending = NoBlending;
+				this.copyMaterial.blending = THREE.NoBlending;
 				this.renderPass( renderer, this.copyMaterial, this.renderToScreen ? null : writeBuffer );
 
 				break;
 
-			case SSAOPass.OUTPUT.Depth:
+			case THREE.SSAOPass.OUTPUT.Depth:
 
 				this.renderPass( renderer, this.depthRenderMaterial, this.renderToScreen ? null : writeBuffer );
 
 				break;
 
-			case SSAOPass.OUTPUT.Normal:
+			case THREE.SSAOPass.OUTPUT.Normal:
 
 				this.copyMaterial.uniforms[ 'tDiffuse' ].value = this.normalRenderTarget.texture;
-				this.copyMaterial.blending = NoBlending;
+				this.copyMaterial.blending = THREE.NoBlending;
 				this.renderPass( renderer, this.copyMaterial, this.renderToScreen ? null : writeBuffer );
 
 				break;
 
-			case SSAOPass.OUTPUT.Default:
+			case THREE.SSAOPass.OUTPUT.Default:
 
 				this.copyMaterial.uniforms[ 'tDiffuse' ].value = this.beautyRenderTarget.texture;
-				this.copyMaterial.blending = NoBlending;
+				this.copyMaterial.blending = THREE.NoBlending;
 				this.renderPass( renderer, this.copyMaterial, this.renderToScreen ? null : writeBuffer );
 
 				this.copyMaterial.uniforms[ 'tDiffuse' ].value = this.blurRenderTarget.texture;
-				this.copyMaterial.blending = CustomBlending;
+				this.copyMaterial.blending = THREE.CustomBlending;
 				this.renderPass( renderer, this.copyMaterial, this.renderToScreen ? null : writeBuffer );
 
 				break;
@@ -366,7 +336,7 @@ SSAOPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 		for ( var i = 0; i < kernelSize; i ++ ) {
 
-			var sample = new Vector3();
+			var sample = new THREE.Vector3();
 			sample.x = ( Math.random() * 2 ) - 1;
 			sample.y = ( Math.random() * 2 ) - 1;
 			sample.z = Math.random();
@@ -374,7 +344,7 @@ SSAOPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 			sample.normalize();
 
 			var scale = i / kernelSize;
-			scale = MathUtils.lerp( 0.1, 1, scale * scale );
+			scale = THREE.MathUtils.lerp( 0.1, 1, scale * scale );
 			sample.multiplyScalar( scale );
 
 			kernel.push( sample );
@@ -387,13 +357,13 @@ SSAOPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 		var width = 4, height = 4;
 
-		if ( SimplexNoise === undefined ) {
+		if ( THREE.SimplexNoise === undefined ) {
 
-			console.error( 'THREE.SSAOPass: The pass relies on SimplexNoise.' );
+			console.error( 'THREE.SSAOPass: The pass relies on THREE.SimplexNoise.' );
 
 		}
 
-		var simplex = new SimplexNoise();
+		var simplex = new THREE.SimplexNoise();
 
 		var size = width * height;
 		var data = new Float32Array( size * 4 );
@@ -415,15 +385,15 @@ SSAOPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 
 		}
 
-		this.noiseTexture = new DataTexture( data, width, height, RGBAFormat, FloatType );
-		this.noiseTexture.wrapS = RepeatWrapping;
-		this.noiseTexture.wrapT = RepeatWrapping;
+		this.noiseTexture = new THREE.DataTexture( data, width, height, THREE.RGBAFormat, THREE.FloatType );
+		this.noiseTexture.wrapS = THREE.RepeatWrapping;
+		this.noiseTexture.wrapT = THREE.RepeatWrapping;
 
 	}
 
 } );
 
-SSAOPass.OUTPUT = {
+THREE.SSAOPass.OUTPUT = {
 	'Default': 0,
 	'SSAO': 1,
 	'Blur': 2,
@@ -431,5 +401,3 @@ SSAOPass.OUTPUT = {
 	'Depth': 4,
 	'Normal': 5
 };
-
-export { SSAOPass };

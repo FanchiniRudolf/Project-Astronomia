@@ -2,29 +2,22 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-import {
-	ShaderMaterial,
-	UniformsUtils
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
-import { DotScreenShader } from "../shaders/DotScreenShader.js";
+THREE.DotScreenPass = function ( center, angle, scale ) {
 
-var DotScreenPass = function ( center, angle, scale ) {
+	THREE.Pass.call( this );
 
-	Pass.call( this );
+	if ( THREE.DotScreenShader === undefined )
+		console.error( "THREE.DotScreenPass relies on THREE.DotScreenShader" );
 
-	if ( DotScreenShader === undefined )
-		console.error( "DotScreenPass relies on DotScreenShader" );
+	var shader = THREE.DotScreenShader;
 
-	var shader = DotScreenShader;
-
-	this.uniforms = UniformsUtils.clone( shader.uniforms );
+	this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
 	if ( center !== undefined ) this.uniforms[ "center" ].value.copy( center );
 	if ( angle !== undefined ) this.uniforms[ "angle" ].value = angle;
 	if ( scale !== undefined ) this.uniforms[ "scale" ].value = scale;
 
-	this.material = new ShaderMaterial( {
+	this.material = new THREE.ShaderMaterial( {
 
 		uniforms: this.uniforms,
 		vertexShader: shader.vertexShader,
@@ -32,13 +25,13 @@ var DotScreenPass = function ( center, angle, scale ) {
 
 	} );
 
-	this.fsQuad = new Pass.FullScreenQuad( this.material );
+	this.fsQuad = new THREE.Pass.FullScreenQuad( this.material );
 
 };
 
-DotScreenPass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.DotScreenPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: DotScreenPass,
+	constructor: THREE.DotScreenPass,
 
 	render: function ( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
@@ -61,5 +54,3 @@ DotScreenPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 	}
 
 } );
-
-export { DotScreenPass };

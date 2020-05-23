@@ -2,19 +2,13 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-import {
-	ShaderMaterial,
-	UniformsUtils
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
+THREE.ShaderPass = function ( shader, textureID ) {
 
-var ShaderPass = function ( shader, textureID ) {
-
-	Pass.call( this );
+	THREE.Pass.call( this );
 
 	this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
 
-	if ( shader instanceof ShaderMaterial ) {
+	if ( shader instanceof THREE.ShaderMaterial ) {
 
 		this.uniforms = shader.uniforms;
 
@@ -22,9 +16,9 @@ var ShaderPass = function ( shader, textureID ) {
 
 	} else if ( shader ) {
 
-		this.uniforms = UniformsUtils.clone( shader.uniforms );
+		this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
-		this.material = new ShaderMaterial( {
+		this.material = new THREE.ShaderMaterial( {
 
 			defines: Object.assign( {}, shader.defines ),
 			uniforms: this.uniforms,
@@ -35,13 +29,13 @@ var ShaderPass = function ( shader, textureID ) {
 
 	}
 
-	this.fsQuad = new Pass.FullScreenQuad( this.material );
+	this.fsQuad = new THREE.Pass.FullScreenQuad( this.material );
 
 };
 
-ShaderPass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.ShaderPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: ShaderPass,
+	constructor: THREE.ShaderPass,
 
 	render: function ( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
@@ -70,5 +64,3 @@ ShaderPass.prototype = Object.assign( Object.create( Pass.prototype ), {
 	}
 
 } );
-
-export { ShaderPass };

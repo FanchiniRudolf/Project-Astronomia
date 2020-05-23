@@ -12,62 +12,57 @@
  *
  */
 
-import {
-	WebGLRenderTarget
-} from "../../../build/three.module.js";
-import { SSAARenderPass } from "../postprocessing/SSAARenderPass.js";
+THREE.TAARenderPass = function ( scene, camera, clearColor, clearAlpha ) {
 
-var TAARenderPass = function ( scene, camera, clearColor, clearAlpha ) {
+	if ( THREE.SSAARenderPass === undefined ) {
 
-	if ( SSAARenderPass === undefined ) {
-
-		console.error( "TAARenderPass relies on SSAARenderPass" );
+		console.error( "THREE.TAARenderPass relies on THREE.SSAARenderPass" );
 
 	}
 
-	SSAARenderPass.call( this, scene, camera, clearColor, clearAlpha );
+	THREE.SSAARenderPass.call( this, scene, camera, clearColor, clearAlpha );
 
 	this.sampleLevel = 0;
 	this.accumulate = false;
 
 };
 
-TAARenderPass.JitterVectors = SSAARenderPass.JitterVectors;
+THREE.TAARenderPass.JitterVectors = THREE.SSAARenderPass.JitterVectors;
 
-TAARenderPass.prototype = Object.assign( Object.create( SSAARenderPass.prototype ), {
+THREE.TAARenderPass.prototype = Object.assign( Object.create( THREE.SSAARenderPass.prototype ), {
 
-	constructor: TAARenderPass,
+	constructor: THREE.TAARenderPass,
 
 	render: function ( renderer, writeBuffer, readBuffer, deltaTime ) {
 
 		if ( ! this.accumulate ) {
 
-			SSAARenderPass.prototype.render.call( this, renderer, writeBuffer, readBuffer, deltaTime );
+			THREE.SSAARenderPass.prototype.render.call( this, renderer, writeBuffer, readBuffer, deltaTime );
 
 			this.accumulateIndex = - 1;
 			return;
 
 		}
 
-		var jitterOffsets = TAARenderPass.JitterVectors[ 5 ];
+		var jitterOffsets = THREE.TAARenderPass.JitterVectors[ 5 ];
 
 		if ( ! this.sampleRenderTarget ) {
 
-			this.sampleRenderTarget = new WebGLRenderTarget( readBuffer.width, readBuffer.height, this.params );
+			this.sampleRenderTarget = new THREE.WebGLRenderTarget( readBuffer.width, readBuffer.height, this.params );
 			this.sampleRenderTarget.texture.name = "TAARenderPass.sample";
 
 		}
 
 		if ( ! this.holdRenderTarget ) {
 
-			this.holdRenderTarget = new WebGLRenderTarget( readBuffer.width, readBuffer.height, this.params );
+			this.holdRenderTarget = new THREE.WebGLRenderTarget( readBuffer.width, readBuffer.height, this.params );
 			this.holdRenderTarget.texture.name = "TAARenderPass.hold";
 
 		}
 
 		if ( this.accumulate && this.accumulateIndex === - 1 ) {
 
-			SSAARenderPass.prototype.render.call( this, renderer, this.holdRenderTarget, readBuffer, deltaTime );
+			THREE.SSAARenderPass.prototype.render.call( this, renderer, this.holdRenderTarget, readBuffer, deltaTime );
 
 			this.accumulateIndex = 0;
 
@@ -143,5 +138,3 @@ TAARenderPass.prototype = Object.assign( Object.create( SSAARenderPass.prototype
 	}
 
 } );
-
-export { TAARenderPass };

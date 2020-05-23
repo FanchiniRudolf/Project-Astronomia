@@ -2,30 +2,20 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-import {
-	LinearFilter,
-	RGBFormat,
-	ShaderMaterial,
-	UniformsUtils,
-	WebGLRenderTarget
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
-import { CopyShader } from "../shaders/CopyShader.js";
+THREE.SavePass = function ( renderTarget ) {
 
-var SavePass = function ( renderTarget ) {
+	THREE.Pass.call( this );
 
-	Pass.call( this );
+	if ( THREE.CopyShader === undefined )
+		console.error( "THREE.SavePass relies on THREE.CopyShader" );
 
-	if ( CopyShader === undefined )
-		console.error( "SavePass relies on CopyShader" );
-
-	var shader = CopyShader;
+	var shader = THREE.CopyShader;
 
 	this.textureID = "tDiffuse";
 
-	this.uniforms = UniformsUtils.clone( shader.uniforms );
+	this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
-	this.material = new ShaderMaterial( {
+	this.material = new THREE.ShaderMaterial( {
 
 		uniforms: this.uniforms,
 		vertexShader: shader.vertexShader,
@@ -37,20 +27,20 @@ var SavePass = function ( renderTarget ) {
 
 	if ( this.renderTarget === undefined ) {
 
-		this.renderTarget = new WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: LinearFilter, magFilter: LinearFilter, format: RGBFormat, stencilBuffer: false } );
+		this.renderTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false } );
 		this.renderTarget.texture.name = "SavePass.rt";
 
 	}
 
 	this.needsSwap = false;
 
-	this.fsQuad = new Pass.FullScreenQuad( this.material );
+	this.fsQuad = new THREE.Pass.FullScreenQuad( this.material );
 
 };
 
-SavePass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.SavePass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: SavePass,
+	constructor: THREE.SavePass,
 
 	render: function ( renderer, writeBuffer, readBuffer ) {
 
@@ -67,5 +57,3 @@ SavePass.prototype = Object.assign( Object.create( Pass.prototype ), {
 	}
 
 } );
-
-export { SavePass };

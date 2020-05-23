@@ -2,48 +2,36 @@
  * @author HypnosNova / https://www.threejs.org.cn/gallery/
  */
 
-import {
-	LinearFilter,
-	MeshBasicMaterial,
-	NearestFilter,
-	RGBAFormat,
-	ShaderMaterial,
-	UniformsUtils,
-	WebGLRenderTarget
-} from "../../../build/three.module.js";
-import { Pass } from "../postprocessing/Pass.js";
-import { AfterimageShader } from "../shaders/AfterimageShader.js";
+THREE.AfterimagePass = function ( damp ) {
 
-var AfterimagePass = function ( damp ) {
+	THREE.Pass.call( this );
 
-	Pass.call( this );
+	if ( THREE.AfterimageShader === undefined )
+		console.error( "THREE.AfterimagePass relies on THREE.AfterimageShader" );
 
-	if ( AfterimageShader === undefined )
-		console.error( "AfterimagePass relies on AfterimageShader" );
+	this.shader = THREE.AfterimageShader;
 
-	this.shader = AfterimageShader;
-
-	this.uniforms = UniformsUtils.clone( this.shader.uniforms );
+	this.uniforms = THREE.UniformsUtils.clone( this.shader.uniforms );
 
 	this.uniforms[ "damp" ].value = damp !== undefined ? damp : 0.96;
 
-	this.textureComp = new WebGLRenderTarget( window.innerWidth, window.innerHeight, {
+	this.textureComp = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, {
 
-		minFilter: LinearFilter,
-		magFilter: NearestFilter,
-		format: RGBAFormat
-
-	} );
-
-	this.textureOld = new WebGLRenderTarget( window.innerWidth, window.innerHeight, {
-
-		minFilter: LinearFilter,
-		magFilter: NearestFilter,
-		format: RGBAFormat
+		minFilter: THREE.LinearFilter,
+		magFilter: THREE.NearestFilter,
+		format: THREE.RGBAFormat
 
 	} );
 
-	this.shaderMaterial = new ShaderMaterial( {
+	this.textureOld = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, {
+
+		minFilter: THREE.LinearFilter,
+		magFilter: THREE.NearestFilter,
+		format: THREE.RGBAFormat
+
+	} );
+
+	this.shaderMaterial = new THREE.ShaderMaterial( {
 
 		uniforms: this.uniforms,
 		vertexShader: this.shader.vertexShader,
@@ -51,16 +39,16 @@ var AfterimagePass = function ( damp ) {
 
 	} );
 
-	this.compFsQuad = new Pass.FullScreenQuad( this.shaderMaterial );
+	this.compFsQuad = new THREE.Pass.FullScreenQuad( this.shaderMaterial );
 
-	var material = new MeshBasicMaterial();
-	this.copyFsQuad = new Pass.FullScreenQuad( material );
+	var material = new THREE.MeshBasicMaterial();
+	this.copyFsQuad = new THREE.Pass.FullScreenQuad( material );
 
 };
 
-AfterimagePass.prototype = Object.assign( Object.create( Pass.prototype ), {
+THREE.AfterimagePass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
 
-	constructor: AfterimagePass,
+	constructor: THREE.AfterimagePass,
 
 	render: function ( renderer, writeBuffer, readBuffer ) {
 
@@ -103,5 +91,3 @@ AfterimagePass.prototype = Object.assign( Object.create( Pass.prototype ), {
 	}
 
 } );
-
-export { AfterimagePass };
