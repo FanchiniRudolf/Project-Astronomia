@@ -5,7 +5,8 @@ scene = null,
 camera = null,
 root = null,
 group = null,
-objectList = [];
+objectList = [],
+orbitControls = null;
 
 let objLoader = null;
 
@@ -77,11 +78,13 @@ async function loadObj(objModelUrl, objectList)
             }
         });
 
-        object.scale.set(15, 15, 15);
+        object.scale.set(8, 8, 8);
         object.rotation.y = 1;
+        object.position.set(0,10,-8);
         object.name = "objObject";
         objectList.push(object);
         scene.add(object);
+        run();
 
     }
     catch (err) {
@@ -100,7 +103,11 @@ function run()
     // Update the animations
     KF.update();
 
-    composer.render();
+
+    // Update the camera controller
+    orbitControls.update();
+
+    //composer.render();
 
 
 
@@ -130,12 +137,15 @@ function createScene(canvas) {
     camera.position.set(-5, 40, 150);
     scene.add(camera);
 
+    orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+
     // Create a group to hold all the objects
     root = new THREE.Object3D;
 
-    ambientLight = new THREE.AmbientLight ( 0xff00ff, 0.8);
+    ambientLight = new THREE.AmbientLight ( 0x404040, 0.8);
     root.add(ambientLight);
-    pointLight = new THREE.PointLight(0x00ff00, 1)
+    pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set( 0, 30, 0 );
     root.add(pointLight);
 
     // Create the objects
@@ -156,23 +166,35 @@ function createScene(canvas) {
     let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map, side:THREE.DoubleSide}));
 
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.y = -40;
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     group.add( mesh );
+    new THREE.GLTFLoader().load( 'models/mazda/scene.gltf', function ( gltf ) {
 
-    
-    var renderScene = new THREE.RenderPass( scene, camera );
+        var model = gltf.scene;
+        model.position.set(-30, 18, 80)
 
-	var bloomPass = new THREE.BloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+        model.rotation.y = 1;
+        model.scale.set(15,15,15);
+        scene.add( model );
+
+    } );
+
+    var composer = new THREE.EffectComposer( renderer );
+    var renderPass = new THREE.RenderPass( scene, camera );
+    composer.addPass( renderPass );
+    renderPass.renderToScreen = true;
+
+	var bloomPass = new THREE.BloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.5, 0.85 );
     bloomPass.threshold = params.bloomThreshold;
 	bloomPass.strength = params.bloomStrength;
 	bloomPass.radius = params.bloomRadius;
-
-	composer = new THREE.EffectComposer( renderer );
-	composer.addPass( renderScene );
-	composer.addPass( bloomPass );
+    composer.addPass( bloomPass );
+    bloomPass.renderToScreen = true;
 
     scene.add( root );
 
+
 }
+
+
