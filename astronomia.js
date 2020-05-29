@@ -1,5 +1,4 @@
 
-
 let renderer = null, scene = null, camera = null,
 root = null,group = null,objectList = [],orbitControls = null;
 
@@ -14,15 +13,14 @@ let mapUrl = "images/checker_large.gif";
 let duration = 12; // sec
 
 
-var composer, analyser, uniforms, listener, dataArray;
-
+var analyser, uniforms, listener, dataArray;
+let composer = null, bloomPass = null, gui = null;
 var params = {
-	    exposure: 1,
-		bloomStrength: 1.5,
+	    exposure: .9,
+		bloomStrength: 1,
 		bloomThreshold: 0,
 		bloomRadius: 0 };
 
-let SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
 let objModelUrl = {obj:'models/75-chevrolet_camaro_ss/Chevrolet_Camaro_SS_Low.obj', map:'models/DeLorean/DeLorean.jpg'};
 
 
@@ -72,7 +70,7 @@ async function loadObj(objModelUrl, objectList)
         object.name = "objObject";
         objectList.push(object);
         scene.add(object);
-        run();
+        update();
 
     }
     catch (err) {
@@ -102,22 +100,6 @@ function createAudio(){
     scene.add(listener);
 }
 
-
-function run() 
-{
-    requestAnimationFrame(function() { run(); });
-    
-    // Render the scene
-    renderer.render(scene, camera);
-    //composer.render();
-
-    // Update the animations
-    KF.update();
-
-    // Update the camera controller
-    orbitControls.update();
-
-}
 
 
 function createScene(canvas) {
@@ -149,12 +131,11 @@ function createScene(canvas) {
 
     ambientLight = new THREE.AmbientLight ( 0x404040, 0.8);
     root.add(ambientLight);
-    pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set( 0, 30, 0 );
+    pointLight = new THREE.PointLight(0xff6666, 1);
+    pointLight.position.set( 0, 25, 0 );
     root.add(pointLight);
 
     // Create the objects
-    loadObj(objModelUrl, objectList);
 
     // Create a group to hold the objects
     group = new THREE.Object3D;
@@ -184,7 +165,7 @@ function createScene(canvas) {
         scene.add( model );
 
     } );
-
+    /*
     composer = new THREE.EffectComposer( renderer );
     var renderPass = new THREE.RenderPass( scene, camera );
     composer.addPass( renderPass );
@@ -195,12 +176,60 @@ function createScene(canvas) {
     bloomPass.radius = params.bloomRadius;
     bloomPass.renderToScreen = true;
     composer.addPass( bloomPass );
-
+    */
     scene.add( root );
 
     var startButton = document.getElementById( 'startButton' );
-	startButton.addEventListener( 'click', createAudio );
+    startButton.addEventListener( 'click', createAudio );
 
+    window.addEventListener( 'resize', onWindowResize);
+    loadObj(objModelUrl, objectList);
+    addEffects();
 
+}
+
+function update()
+{
+    requestAnimationFrame(update);
+    render();
+}
+
+function addEffects()
+{
+    // First, we need to create an effect composer: instead of rendering to the WebGLRenderer, we render using the composer.
+    composer = new THREE.EffectComposer(renderer);
+
+    // The effect composer works as a chain of post-processing passes. These are responsible for applying all the visual effects to a scene. They are processed in order of their addition. The first pass is usually a Render pass, so that the first element of the chain is the rendered scene.
+    const renderPass = new THREE.RenderPass(scene, camera);
+
+    // There are several passes available. Here we are using the UnrealBloomPass.
+    bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 0.5, 0.2, 1 );
+    bloomPass.threshold = 0;
+    bloomPass.strength = params.bloomStrength;
+    bloomPass.radius = params.bloomRadius;
+
+    renderer.toneMappingExposure = Math.pow( params.exposure, 1.0 );
+    
+    // After the passes are configured, we add them in the order we want them.
+    composer.addPass(renderPass);
+    composer.addPass(bloomPass);
+}
+
+function render()
+{
+    // Traditional render: take a scene and a camera and render to the canvas
+    // renderer.render(scene, camera);
+
+    // Rendering using an effect composer
+    composer.render();
+    orbitControls.update();
+
+}
+
+function onWindowResize() 
+{
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
