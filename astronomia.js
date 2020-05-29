@@ -13,8 +13,8 @@ let mapUrl = "images/checker_large.gif";
 let duration = 12; // sec
 
 
-var analyser, uniforms, listener, dataArray;
-let composer = null, bloomPass = null, gui = null;
+let audio = null, analyser = null, context = null, src = null, dataArray = null;
+let composer = null, bloomPass = null;
 var params = {
 	    exposure: .9,
 		bloomStrength: 1,
@@ -79,8 +79,20 @@ async function loadObj(objModelUrl, objectList)
 }
 
 function createAudio(){
-    listener = new THREE.AudioListener();
+    audio = document.getElementById('audio');
+    audio.load();
+    audio.play();
+    context = new AudioContext();  // create context
+    src = context.createMediaElementSource(audio); //create src inside ctx
+    analyser = context.createAnalyser(); //create analyser in ctx
+    src.connect(analyser);         //connect analyser node to the src
+    analyser.connect(context.destination); // connect the destination 
+                                        // node to the analyser
 
+    analyser.fftSize = 512;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    /*
+    listener = new THREE.AudioListener();
 	var audio = new THREE.Audio( listener );
 
 	var audioLoader = new THREE.AudioLoader();
@@ -96,8 +108,12 @@ function createAudio(){
 
     //var bufferLength = analyser.frequencyBinCount;;
     console.log(analyser.getFrequencyData());
-    console.log(analyser.data);  
     scene.add(listener);
+    analyserNode = analyser.analyser;
+    var bufferLength = analyserNode.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+    */
+    
 }
 
 
@@ -165,26 +181,15 @@ function createScene(canvas) {
         scene.add( model );
 
     } );
-    /*
-    composer = new THREE.EffectComposer( renderer );
-    var renderPass = new THREE.RenderPass( scene, camera );
-    composer.addPass( renderPass );
-
-	var bloomPass = new THREE.BloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.5, 0.85 );
-    bloomPass.threshold = params.bloomThreshold;
-	bloomPass.strength = params.bloomStrength;
-    bloomPass.radius = params.bloomRadius;
-    bloomPass.renderToScreen = true;
-    composer.addPass( bloomPass );
-    */
     scene.add( root );
 
-    var startButton = document.getElementById( 'startButton' );
-    startButton.addEventListener( 'click', createAudio );
+    //var startButton = document.getElementById( 'startButton' );
+    //startButton.addEventListener( 'click', createAudio );
 
     window.addEventListener( 'resize', onWindowResize);
     loadObj(objModelUrl, objectList);
     addEffects();
+    createAudio();
 
 }
 
@@ -223,7 +228,27 @@ function render()
     // Rendering using an effect composer
     composer.render();
     orbitControls.update();
+    
+    analyser.getByteFrequencyData(dataArray);
+    var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
+    var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
+    // do some basic reductions/normalisations
+    var lowerMax = Math.max(...lowerHalfArray);
+    var lowerAvg = avg(lowerHalfArray);
+    var upperAvg = avg(upperHalfArray);
+    var lowerMaxFr = lowerMax / lowerHalfArray.length;
+    var lowerAvgFr = lowerAvg / lowerHalfArray.length;
+    var upperAvgFr = upperAvg / upperHalfArray.length;
+    console.log(lowerMaxFr, upperAvgFr);
 
+}
+
+function avg (numbers) {
+    let sum = 0;
+    for (let i = 0; i < numbers.length; i++){
+        sum += numbers[i];
+    }
+    return sum / numbers.length;
 }
 
 function onWindowResize() 
