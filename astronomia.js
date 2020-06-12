@@ -27,17 +27,17 @@ var params = {
 let objModelUrl = {obj:'models/75-chevrolet_camaro_ss/Chevrolet_Camaro_SS_Low.obj', map:'models/DeLorean/DeLorean.jpg'};
 
 
-function promisifyLoader ( loader, onProgress ) 
+function promisifyLoader ( loader, onProgress )
 {
     function promiseLoader ( url ) {
-  
+
       return new Promise( ( resolve, reject ) => {
-  
+
         loader.load( url, resolve, onProgress, reject );
-  
+
       } );
     }
-  
+
     return {
       originalLoader: loader,
       load: promiseLoader,
@@ -52,7 +52,7 @@ async function loadObj(objModelUrl, objectList)
 
     try {
         const object = await objPromiseLoader.load(objModelUrl.obj);
-        
+
         let texture = objModelUrl.hasOwnProperty('map') ? new THREE.TextureLoader().load(objModelUrl.map) : null;
         let normalMap = objModelUrl.hasOwnProperty('normalMap') ? new THREE.TextureLoader().load(objModelUrl.normalMap) : null;
         let specularMap = objModelUrl.hasOwnProperty('specularMap') ? new THREE.TextureLoader().load(objModelUrl.specularMap) : null;
@@ -89,12 +89,12 @@ function createAudio(){
     src = context.createMediaElementSource(audio); //create src inside ctx
     analyser = context.createAnalyser(); //create analyser in ctx
     src.connect(analyser);         //connect analyser node to the src
-    analyser.connect(context.destination); // connect the destination 
-                                        
+    analyser.connect(context.destination); // connect the destination
+
 
     analyser.fftSize = 512;
     dataArray = new Uint8Array(analyser.frequencyBinCount);
-    
+
 }
 
 function createStars(){
@@ -204,17 +204,46 @@ function update()
 {
     requestAnimationFrame(update);
     render();
+
+    //Changing effects according the time
     if(deltat>4){
         bloomPass.enabled = true;
-    }
-    if(deltat>19.5){
+    }if(deltat>19.2){
         bloomPass.enabled = false;
-        //effectDot.enabled = true;
+        effectDot.enabled = true;
         effectRgb.enabled = true;
+    }if(deltat>41.9){
+        bloomPass.enabled = true;
+    }if(deltat>50){
+        pixelPass.enabled = true;
+        effectDot.enabled = false;
+        effectRgb.enabled = false;
+    }if(deltat>72.8){
+        pixelPass.enabled = false;
+        effectGrayScale.enabled = true;
+        effectSobel.enabled = true;
+    }if(deltat>118.4){
+        pixelPass.enabled = true;
+    }if(deltat>133.5){
+        pixelPass.enabled = false;
+        effectGrayScale.enabled = false;
+        effectSobel.enabled = false;
+        bloomPass.enabled = false;
+        effectDot.enabled = true;
+        effectRgb.enabled = true;
+    }if(deltat>164){
+        effectDot.enabled = false;
+        effectRgb.enabled = false;
+        bloomPass.enabled = true;
+    }if(deltat>187){
+        pixelPass.enabled = true;
+    }if(deltat>194.5){
+        pixelPass.enabled = false;
+        bloomPass.enabled = false;
     }
-    
+
 }
- 
+
 
 function render()
 {
@@ -228,9 +257,9 @@ function render()
 
     orbitControls.update();
 
-    
+
     analyser.getByteFrequencyData(dataArray);
-    
+    /*
     var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
     var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
     // do some basic reductions/normalisations
@@ -240,12 +269,12 @@ function render()
     var lowerMaxFr = lowerMax / lowerHalfArray.length;
     var lowerAvgFr = lowerAvg / lowerHalfArray.length;
     var upperAvgFr = upperAvg / upperHalfArray.length;
-    //console.log(lowerMaxFr, upperAvgFr);
+    //console.log(lowerMaxFr, upperAvgFr);*/
 
     //currentTime = now;
     console.log(deltat);
     //console.log();
-    
+
 }
 
 function addEffects()
@@ -269,37 +298,35 @@ function addEffects()
     var glitchPass = new THREE.GlitchPass();
     glitchPass.renderToScreen = true;
     composer.addPass( glitchPass );*/
-    
-        //Postprocessing effect 
-        effectDot = new THREE.ShaderPass( THREE.DotScreenShader );
-	    effectDot.uniforms[ 'scale' ].value = 10;
-        composer.addPass( effectDot );
-        effectDot.enabled = false;
 
-        effectRgb = new THREE.ShaderPass( THREE.RGBShiftShader );
-        effectRgb.uniforms[ 'amount' ].value = 0.0028;
-        composer.addPass( effectRgb );
-        effectRgb.enabled = false;
+    //Postprocessing effect
+    effectDot = new THREE.ShaderPass( THREE.DotScreenShader );
+	effectDot.uniforms[ 'scale' ].value = 12;
+    composer.addPass( effectDot );
+    effectDot.enabled = false;
 
+    effectRgb = new THREE.ShaderPass( THREE.RGBShiftShader );
+    effectRgb.uniforms[ 'amount' ].value = 0.0030;
+    composer.addPass( effectRgb );
+    effectRgb.enabled = false;
 
-        //Pixel shader 
-        pixelPass = new THREE.ShaderPass( THREE.PixelShader );
-		pixelPass.uniforms[ "resolution" ].value = new THREE.Vector2( window.innerWidth, window.innerHeight );
-        pixelPass.uniforms[ "resolution" ].value.multiplyScalar( window.devicePixelRatio );
-        pixelPass.uniforms[ "pixelSize" ].value = 2.5;
-        composer.addPass( pixelPass );
-        pixelPass.enabled = false;
+    //Pixel shader
+    pixelPass = new THREE.ShaderPass( THREE.PixelShader );
+	pixelPass.uniforms[ "resolution" ].value = new THREE.Vector2( window.innerWidth, window.innerHeight );
+    pixelPass.uniforms[ "resolution" ].value.multiplyScalar( window.devicePixelRatio );
+    pixelPass.uniforms[ "pixelSize" ].value = 2.5;
+    composer.addPass( pixelPass );
+    pixelPass.enabled = false;
 
-        //Sobel effect
-        effectGrayScale = new THREE.ShaderPass( THREE.LuminosityShader );
-        composer.addPass( effectGrayScale );
-        effectGrayScale.enabled = false;
-        effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader );
-		effectSobel.uniforms[ 'resolution' ].value.x = window.innerWidth * window.devicePixelRatio;
-	    effectSobel.uniforms[ 'resolution' ].value.y = window.innerHeight * window.devicePixelRatio;
-        composer.addPass( effectSobel );
-        effectSobel.enabled = false;
-        
+    //Sobel effect
+    effectGrayScale = new THREE.ShaderPass( THREE.LuminosityShader );        composer.addPass( effectGrayScale );
+    effectGrayScale.enabled = false;
+    effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader );
+	effectSobel.uniforms[ 'resolution' ].value.x = window.innerWidth * window.devicePixelRatio;
+    effectSobel.uniforms[ 'resolution' ].value.y = window.innerHeight * window.devicePixelRatio;
+    composer.addPass( effectSobel );
+    effectSobel.enabled = false;
+
 }
 
 
@@ -311,10 +338,9 @@ function avg (numbers) {
     return sum / numbers.length;
 }
 
-function onWindowResize() 
+function onWindowResize()
 {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
-
