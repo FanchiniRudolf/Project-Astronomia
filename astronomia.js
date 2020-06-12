@@ -5,6 +5,7 @@ root = null,group = null,objectList = [],orbitControls = null;
 let objLoader = null;
 
 let currentTime = Date.now();
+let now = null , deltat = null;
 
 let directionalLight = null;
 let spotLight = null;
@@ -14,7 +15,9 @@ let duration = 12; // sec
 
 
 let audio = null, analyser = null, context = null, src = null, dataArray = null;
-let composer = null, bloomPass = null;
+
+let composer = null, bloomPass = null, effectDot = null, effectRgb = null, pixelPass = null, effectGrayScale = null, effectSobel = null;
+let renderPass = null;
 var params = {
 	    exposure: .9,
 		bloomStrength: 1,
@@ -87,32 +90,10 @@ function createAudio(){
     analyser = context.createAnalyser(); //create analyser in ctx
     src.connect(analyser);         //connect analyser node to the src
     analyser.connect(context.destination); // connect the destination 
-                                        // node to the analyser
+                                        
 
     analyser.fftSize = 512;
     dataArray = new Uint8Array(analyser.frequencyBinCount);
-    /*
-    listener = new THREE.AudioListener();
-	var audio = new THREE.Audio( listener );
-
-	var audioLoader = new THREE.AudioLoader();
-        audioLoader.load( 'astronomia.mp3', function( buffer ) {
-            audio.setBuffer( buffer );
-            audio.setLoop(true);
-            audio.setVolume(0.5);
-            audio.play();
-        });
-
-     // create an AudioAnalyser, passing in the sound and desired fftSize
-    var analyser = new THREE.AudioAnalyser( audio, 2048 );
-
-    //var bufferLength = analyser.frequencyBinCount;;
-    console.log(analyser.getFrequencyData());
-    scene.add(listener);
-    analyserNode = analyser.analyser;
-    var bufferLength = analyserNode.frequencyBinCount;
-    var dataArray = new Uint8Array(bufferLength);
-    */
     
 }
 
@@ -197,39 +178,32 @@ function update()
 {
     requestAnimationFrame(update);
     render();
+    if(deltat>4){
+        bloomPass.enabled = true;
+    }
+    if(deltat>19.5){
+        bloomPass.enabled = false;
+        //effectDot.enabled = true;
+        effectRgb.enabled = true;
+    }
 }
-
-function addEffects()
-{
-    // First, we need to create an effect composer: instead of rendering to the WebGLRenderer, we render using the composer.
-    composer = new THREE.EffectComposer(renderer);
-
-    // The effect composer works as a chain of post-processing passes. These are responsible for applying all the visual effects to a scene. They are processed in order of their addition. The first pass is usually a Render pass, so that the first element of the chain is the rendered scene.
-    const renderPass = new THREE.RenderPass(scene, camera);
-
-    // There are several passes available. Here we are using the UnrealBloomPass.
-    bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 0.5, 0.2, 1 );
-    bloomPass.threshold = 0;
-    bloomPass.strength = params.bloomStrength;
-    bloomPass.radius = params.bloomRadius;
-
-    renderer.toneMappingExposure = Math.pow( params.exposure, 1.0 );
-    
-    // After the passes are configured, we add them in the order we want them.
-    composer.addPass(renderPass);
-    composer.addPass(bloomPass);
-}
+ 
 
 function render()
 {
     // Traditional render: take a scene and a camera and render to the canvas
     // renderer.render(scene, camera);
-
+    now = Date.now();
+    deltat = (now - currentTime) /1000;
+    console.log(deltat);
     // Rendering using an effect composer
     composer.render();
+
     orbitControls.update();
+
     
     analyser.getByteFrequencyData(dataArray);
+    
     var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
     var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
     // do some basic reductions/normalisations
@@ -239,9 +213,67 @@ function render()
     var lowerMaxFr = lowerMax / lowerHalfArray.length;
     var lowerAvgFr = lowerAvg / lowerHalfArray.length;
     var upperAvgFr = upperAvg / upperHalfArray.length;
-    console.log(lowerMaxFr, upperAvgFr);
+    //console.log(lowerMaxFr, upperAvgFr);
 
+    //currentTime = now;
+    console.log(deltat);
+    //console.log();
 }
+
+function addEffects()
+{
+    // First, we need to create an effect composer: instead of rendering to the WebGLRenderer, we render using the composer.
+    composer = new THREE.EffectComposer(renderer);
+
+    // The effect composer works as a chain of post-processing passes. These are responsible for applying all the visual effects to a scene. They are processed in order of their addition. The first pass is usually a Render pass, so that the first element of the chain is the rendered scene.
+    renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    // UnrealBloomPass
+    bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 0.5, 0.2, 1 );
+    bloomPass.threshold = 0;
+    bloomPass.strength = params.bloomStrength;
+    bloomPass.radius = params.bloomRadius;
+    renderer.toneMappingExposure = Math.pow( params.exposure, 1.0 );
+    composer.addPass(bloomPass);
+    bloomPass.enabled = false;
+    /*GlitchPass won't work
+    var glitchPass = new THREE.GlitchPass();
+    glitchPass.renderToScreen = true;
+    composer.addPass( glitchPass );*/
+    
+        //Postprocessing effect 
+        effectDot = new THREE.ShaderPass( THREE.DotScreenShader );
+	    effectDot.uniforms[ 'scale' ].value = 10;
+        composer.addPass( effectDot );
+        effectDot.enabled = false;
+
+        effectRgb = new THREE.ShaderPass( THREE.RGBShiftShader );
+        effectRgb.uniforms[ 'amount' ].value = 0.0028;
+        composer.addPass( effectRgb );
+        effectRgb.enabled = false;
+
+
+        //Pixel shader 
+        pixelPass = new THREE.ShaderPass( THREE.PixelShader );
+		pixelPass.uniforms[ "resolution" ].value = new THREE.Vector2( window.innerWidth, window.innerHeight );
+        pixelPass.uniforms[ "resolution" ].value.multiplyScalar( window.devicePixelRatio );
+        pixelPass.uniforms[ "pixelSize" ].value = 2.5;
+        composer.addPass( pixelPass );
+        pixelPass.enabled = false;
+
+        //Sobel effect
+        effectGrayScale = new THREE.ShaderPass( THREE.LuminosityShader );
+        composer.addPass( effectGrayScale );
+        effectGrayScale.enabled = false;
+        effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader );
+		effectSobel.uniforms[ 'resolution' ].value.x = window.innerWidth * window.devicePixelRatio;
+	    effectSobel.uniforms[ 'resolution' ].value.y = window.innerHeight * window.devicePixelRatio;
+        composer.addPass( effectSobel );
+        effectSobel.enabled = false;
+        
+}
+
 
 function avg (numbers) {
     let sum = 0;
