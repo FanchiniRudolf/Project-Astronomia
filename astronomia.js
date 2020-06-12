@@ -1,6 +1,7 @@
 
 let renderer = null, scene = null, camera = null,
-root = null,group = null,objectList = [],orbitControls = null, stars = null, starGeo = null;
+root = null,group = null,objectList = [],orbitControls = null, stars = null, starGeo = null, 
+car = null, animator = null;
 
 let objLoader = null;
 
@@ -10,6 +11,7 @@ let now = null , deltat = null;
 let directionalLight = null;
 let spotLight = null;
 let mapUrl = "images/checker_large.gif";
+let roadUrl = "images/road.jpg";
 
 let duration = 12; // sec
 const NUMBER_OF_STARS = 4000;
@@ -48,39 +50,49 @@ function promisifyLoader ( loader, onProgress )
 
 const onError = ( ( err ) => { console.error( err ); } );
 
-async function loadObj(objModelUrl, objectList)
+async function loadObj()
 {
-    const objPromiseLoader = promisifyLoader(new THREE.OBJLoader());
 
-    try {
-        const object = await objPromiseLoader.load(objModelUrl.obj);
+    new THREE.GLTFLoader().load( 'models/mazda/scene.gltf', function ( gltf ) {
 
-        let texture = objModelUrl.hasOwnProperty('map') ? new THREE.TextureLoader().load(objModelUrl.map) : null;
-        let normalMap = objModelUrl.hasOwnProperty('normalMap') ? new THREE.TextureLoader().load(objModelUrl.normalMap) : null;
-        let specularMap = objModelUrl.hasOwnProperty('specularMap') ? new THREE.TextureLoader().load(objModelUrl.specularMap) : null;
+        var model = gltf.scene;
+        model.position.set(-30, 18, 80)
 
-        object.traverse(function (child) {
-            if (child instanceof THREE.Mesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-                child.material.map = texture;
-                child.material.normalMap = normalMap;
-                child.material.specularMap = specularMap;
-            }
-        });
+        model.rotation.y = 1;
+        model.scale.set(20,20,20);
+        model.rotation.y = Math.PI/2;
+        model.position.set(-120, 25, 33);
+        model.name = "objObject";
+        car = model
+        scene.add( car );
+        makeCarAnimation();
+        animator.start();
 
-        object.scale.set(8, 8, 8);
-        object.rotation.y = 1;
-        object.position.set(0,10,-8);
-        object.name = "objObject";
-        objectList.push(object);
-        scene.add(object);
+    } );
+    
+        
         update();
-
-    }
-    catch (err) {
-        return onError(err);
-    }
+}
+function makeCarAnimation(){
+    animator = new KF.KeyFrameAnimator;
+    animator.init({
+            interps:
+                [
+                    {
+                        keys: [0, 0.5, 1],
+                        values: [
+                            {x: -120},
+                            {x: -60},
+                            {x: 0}
+                            
+                        ],
+                        target:car.position
+                    },
+                ],
+            loop: false,
+            duration: 10000, //ms
+        });
+        console.log(animator);
 }
 
 function createAudio(){
@@ -146,7 +158,8 @@ function createScene(canvas) {
 
     // Add  a camera so we can view the scene
     camera = new THREE.PerspectiveCamera( 80, canvas.width / canvas.height, 1, 4000 );
-    camera.position.set(-5, 40, 150);
+    camera.position.set(-106, 16, 0);
+    camera.lookAt(new THREE.Vector3(0,0,0));
     scene.add(camera);
 
     orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -173,43 +186,55 @@ function createScene(canvas) {
     let color = 0xffffff;
 
     // Put in a ground plane to show off the lighting
-    let geometry = new THREE.PlaneGeometry(200, 200, 50, 50);
+    let geometry = new THREE.PlaneGeometry(500, 500, 50, 50);
     let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map, side:THREE.DoubleSide}));
-
     mesh.rotation.x = -Math.PI / 2;
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     group.add( mesh );
-    new THREE.GLTFLoader().load( 'models/mazda/scene.gltf', function ( gltf ) {
 
-        var model = gltf.scene;
-        model.position.set(-30, 18, 80)
+    createRoad()
 
-        model.rotation.y = 1;
-        model.scale.set(15,15,15);
-        scene.add( model );
-
-    } );
+    
     scene.add( root );
 
     //var startButton = document.getElementById( 'startButton' );
     //startButton.addEventListener( 'click', createAudio );
 
     window.addEventListener( 'resize', onWindowResize);
-    loadObj(objModelUrl, objectList);
+    loadObj();
     addEffects();
     createAudio();
     createStars();
 
 }
 
+function createRoad(){
+    // Create a texture map
+    let map = new THREE.TextureLoader().load(roadUrl);
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.repeat.set(8, 8);
+    let color = 0xffffff;
+
+    // Put in a ground plane to show off the lighting
+    let geometry = new THREE.PlaneGeometry(200, 50, 50, 50);
+    let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map, side:THREE.DoubleSide}));
+
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y += 1;
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    group.add( mesh );
+}
+
 function update()
 {
     requestAnimationFrame(update);
     render();
+    KF.update();
 
     //Changing effects according the time
-    /*if(deltat>4){
+    if(deltat>4){
         bloomPass.enabled = true;
     }if(deltat>19.2){
         bloomPass.enabled = false;
@@ -243,13 +268,13 @@ function update()
     }if(deltat>194.5){
         pixelPass.enabled = false;
         bloomPass.enabled = false;
-    }*/
+    }
+    
 
 
 }
 
 function animateStars(){
-    console.log(stars)
     //Move stars
     starGeo.vertices.forEach(p => {
         p.velocity += p.acceleration;
@@ -275,7 +300,6 @@ function render()
     composer.render();
 
     orbitControls.update();
-
 
     analyser.getByteFrequencyData(dataArray);
     /*
