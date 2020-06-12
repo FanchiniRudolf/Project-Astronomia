@@ -1,6 +1,6 @@
 
 let renderer = null, scene = null, camera = null,
-root = null,group = null,objectList = [],orbitControls = null, stars = null;
+root = null,group = null,objectList = [],orbitControls = null, stars = null, starGeo = null;
 
 let objLoader = null;
 
@@ -12,9 +12,11 @@ let spotLight = null;
 let mapUrl = "images/checker_large.gif";
 
 let duration = 12; // sec
+const NUMBER_OF_STARS = 4000;
 
 
 let audio = null, analyser = null, context = null, src = null, dataArray = null;
+var test = true;
 
 let composer = null, bloomPass = null, effectDot = null, effectRgb = null, pixelPass = null, effectGrayScale = null, effectSobel = null;
 let renderPass = null;
@@ -97,14 +99,17 @@ function createAudio(){
 
 }
 
+
 function createStars(){
     starGeo = new THREE.Geometry();
-    for(let i=0;i<6000;i++) {
+    for(let i=0;i<NUMBER_OF_STARS;i++) {
         let star = new THREE.Vector3(
         Math.random() * 600 - 300,
         Math.random() * 600 - 300,
         Math.random() * 600 - 300
         );
+        star.velocity = 0;
+        star.acceleration = 0.02;
         starGeo.vertices.push(star);
     }
 
@@ -117,8 +122,6 @@ function createStars(){
 
 
     stars = new THREE.Points(starGeo,starMaterial);
-    //star.velocity = 0;
-    //star.acceleration = 0.001;
     scene.add(stars);
 }
 
@@ -206,7 +209,7 @@ function update()
     render();
 
     //Changing effects according the time
-    if(deltat>4){
+    /*if(deltat>4){
         bloomPass.enabled = true;
     }if(deltat>19.2){
         bloomPass.enabled = false;
@@ -240,10 +243,26 @@ function update()
     }if(deltat>194.5){
         pixelPass.enabled = false;
         bloomPass.enabled = false;
-    }
+    }*/
+
 
 }
 
+function animateStars(){
+    console.log(stars)
+    //Move stars
+    starGeo.vertices.forEach(p => {
+        p.velocity += p.acceleration;
+        p.x -= p.velocity;
+        
+        if (p.x < -200) {
+          p.x = 200;
+          p.velocity = 0;
+        }
+      });
+      starGeo.verticesNeedUpdate = true; 
+      stars.rotation.x +=0.002;
+}
 
 function render()
 {
@@ -251,7 +270,7 @@ function render()
     // renderer.render(scene, camera);
     now = Date.now();
     deltat = (now - currentTime) /1000;
-    console.log(deltat);
+    //console.log(deltat);
     // Rendering using an effect composer
     composer.render();
 
@@ -272,9 +291,9 @@ function render()
     //console.log(lowerMaxFr, upperAvgFr);*/
 
     //currentTime = now;
-    console.log(deltat);
+    //console.log(deltat);
     //console.log();
-
+    animateStars()
 }
 
 function addEffects()
