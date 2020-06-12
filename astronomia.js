@@ -81,7 +81,7 @@ function makeCarAnimation(){
                     {
                         keys: [0, 0.5, 1],
                         values: [
-                            {x: -120},
+                            {x: -100},
                             {x: -60},
                             {x: 0}
                             
@@ -233,41 +233,63 @@ function update()
     render();
     KF.update();
 
-    //Changing effects according the time
+    /Changing effects according the time
     if(deltat>4){
         bloomPass.enabled = true;
-    }if(deltat>19.2){
+        pointLight.color.setHex( 0x32ff84 );
+    }if(deltat>12){
+        pointLight.intensity += .01;
+    }if(deltat>19.4){
         bloomPass.enabled = false;
         effectDot.enabled = true;
         effectRgb.enabled = true;
-    }if(deltat>41.9){
-        bloomPass.enabled = true;
+        pointLight.intensity -= 0.009;
+    }if(deltat>42){
+        effectDot.enabled = false;
+        pointLight.color.setHex( 0xff0c0c );
+        //bloomPass.enabled = true;
     }if(deltat>50){
-        pixelPass.enabled = true;
+        //pixelPass.enabled = true;
+        bloomPass.enabled = true;
+        //pointLight.intensity = 1;
         effectDot.enabled = false;
         effectRgb.enabled = false;
+        pointLight.color.setHex( 0x7d32ff );
+        pointLight.intensity -= 0.009;
+    }if(deltat>65){
+        pointLight.intensity += .014;
     }if(deltat>72.8){
         pixelPass.enabled = false;
         effectGrayScale.enabled = true;
         effectSobel.enabled = true;
+        pointLight.intensity -= 0.01;
+    }if(deltat>80){
+        pointLight.intensity = 1;
     }if(deltat>118.4){
         pixelPass.enabled = true;
-    }if(deltat>133.5){
+    }if(deltat>133.5){ 
         pixelPass.enabled = false;
         effectGrayScale.enabled = false;
         effectSobel.enabled = false;
         bloomPass.enabled = false;
         effectDot.enabled = true;
         effectRgb.enabled = true;
+        pointLight.intensity = 3;
     }if(deltat>164){
+        pointLight.intensity = 1;
+        //pointLight.intensity -= .01;
         effectDot.enabled = false;
         effectRgb.enabled = false;
         bloomPass.enabled = true;
+        pointLight.color.setHex( 0xfcfc0c );
     }if(deltat>187){
         pixelPass.enabled = true;
+        pointLight.color.setHex( 0xff3255 );
+        //pointLight.intensity += .01;
     }if(deltat>194.5){
         pixelPass.enabled = false;
         bloomPass.enabled = false;
+        pointLight.intensity = 0;
     }
     
 
