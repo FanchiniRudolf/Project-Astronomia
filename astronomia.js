@@ -81,9 +81,9 @@ function makeCarAnimation(){
                     {
                         keys: [0, 0.5, 1],
                         values: [
-                            {x: -100},
-                            {x: -60},
-                            {x: 0}
+                            {x: -120},
+                            {x: -90},
+                            {x: -60}
                             
                         ],
                         target:car.position
@@ -233,7 +233,7 @@ function update()
     render();
     KF.update();
 
-    /Changing effects according the time
+    //Changing effects according the time
     if(deltat>4){
         bloomPass.enabled = true;
         pointLight.color.setHex( 0x32ff84 );
