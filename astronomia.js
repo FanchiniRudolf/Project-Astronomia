@@ -1,6 +1,6 @@
 
 let renderer = null, scene = null, camera = null,
-root = null,group = null,objectList = [],orbitControls = null;
+root = null,group = null,objectList = [],orbitControls = null, stars = null;
 
 let objLoader = null;
 
@@ -97,6 +97,31 @@ function createAudio(){
     
 }
 
+function createStars(){
+    starGeo = new THREE.Geometry();
+    for(let i=0;i<6000;i++) {
+        let star = new THREE.Vector3(
+        Math.random() * 600 - 300,
+        Math.random() * 600 - 300,
+        Math.random() * 600 - 300
+        );
+        starGeo.vertices.push(star);
+    }
+
+    let texture = new THREE.TextureLoader().load( 'images\\star.png' );
+    let starMaterial = new THREE.PointsMaterial({
+        color: 0xaaaaaa,
+        size: 0.7,
+        map: texture
+    });
+
+
+    stars = new THREE.Points(starGeo,starMaterial);
+    //star.velocity = 0;
+    //star.acceleration = 0.001;
+    scene.add(stars);
+}
+
 
 
 function createScene(canvas) {
@@ -171,6 +196,7 @@ function createScene(canvas) {
     loadObj(objModelUrl, objectList);
     addEffects();
     createAudio();
+    createStars();
 
 }
 
@@ -186,6 +212,7 @@ function update()
         //effectDot.enabled = true;
         effectRgb.enabled = true;
     }
+    
 }
  
 
@@ -218,6 +245,7 @@ function render()
     //currentTime = now;
     console.log(deltat);
     //console.log();
+    
 }
 
 function addEffects()
