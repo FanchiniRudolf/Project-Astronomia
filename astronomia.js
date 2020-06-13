@@ -1,7 +1,7 @@
 
 let renderer = null, scene = null, camera = null,
 root = null,group = null,objectList = [],orbitControls = null, stars = null, starGeo = null, 
-car = null, animator = null;
+car = null, animator = null, animator2 = null;
 
 let objLoader = null;
 
@@ -67,6 +67,7 @@ async function loadObj()
         scene.add( car );
         makeCarAnimation();
         animator.start();
+        animator2.start();
 
     } );
     
@@ -92,7 +93,26 @@ function makeCarAnimation(){
             loop: false,
             duration: 10000, //ms
         });
-        console.log(animator);
+    animator2 = new KF.KeyFrameAnimator;
+    animator2.init({
+            interps:
+                [
+                    {
+                        keys: [0, 0.25, 0.5, 1],
+                        values: [
+                            {y: 25},
+                            {y: 26},
+                            {y: 24},
+                            {y: 25}
+                            
+                        ],
+                        target:car.position
+                    },
+                ],
+            loop: true,
+            duration: 10000, //ms
+        });
+        
 }
 
 function createAudio(){
