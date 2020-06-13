@@ -289,6 +289,8 @@ function update()
     requestAnimationFrame(update);
     render();
     KF.update();
+    sun.rotation.x += 0.001;
+    sun.rotation.y += 0.001;
 
     //Changing effects according the time
     if(deltat>4){
