@@ -1,7 +1,7 @@
 
 let renderer = null, scene = null, camera = null,
 root = null,group = null,objectList = [],orbitControls = null, stars = null, starGeo = null, 
-car = null, animator = null, animator2 = null;
+car = null, animator = null, animator2 = null, sun = null;
 
 let objLoader = null;
 
@@ -115,6 +115,42 @@ function makeCarAnimation(){
         
 }
 
+function createSun(){
+    let textureLoader = new THREE.TextureLoader();
+
+				uniforms = {
+
+					"fogDensity": { value: 0.6 },
+					"fogColor": { value: new THREE.Vector3( 255, 255, 0 ) },
+					"time": { value: 1.0 },
+					"uvScale": { value: new THREE.Vector2( 2.5, 2.5 ) },
+					"texture1": { value: textureLoader.load( 'images/cloud.png' ) },
+					"texture2": { value: textureLoader.load( 'images/lavatile.jpg' ) }
+
+				};
+
+				uniforms[ "texture1" ].value.wrapS = uniforms[ "texture1" ].value.wrapT = THREE.RepeatWrapping;
+				uniforms[ "texture2" ].value.wrapS = uniforms[ "texture2" ].value.wrapT = THREE.RepeatWrapping;
+
+				//sun size
+				let size = 200;
+
+				let material = new THREE.ShaderMaterial( {
+
+					uniforms: uniforms,
+					vertexShader: document.getElementById( 'vertexShader' ).textContent,
+					fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+
+				} );
+
+                sun = new THREE.Mesh( new THREE.SphereGeometry( size, 30, 30 ), material );
+                sun.position.set(300, 0, 0)
+                sun.rotation.x = 0.3;
+                scene.add(sun);
+				
+
+}
+
 function createAudio(){
     audio = document.getElementById('audio');
     audio.load();
@@ -226,6 +262,7 @@ function createScene(canvas) {
     addEffects();
     createAudio();
     createStars();
+    createSun();
 
 }
 
